@@ -1,107 +1,179 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestión de Salones</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container py-5">
-    <h1 class="mb-4">Gestión de Salones</h1>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Gestión de Salones</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    </head>
+    <body class="container py-5">
+        <h1 class="mb-4">Gestión de Salones</h1>
 
-    <form id="salonForm" class="mb-4">
-        <div class="row g-2">
-            <div class="col-md-2">
-                <input type="number" id="id" class="form-control" placeholder="ID" required>
+        <form id="salonForm" class="mb-4" autocomplete="off">
+            <div class="row g-2">
+                <div class="col-md-2">
+                    <input type="number" id="id" class="form-control" placeholder="ID" required min="1" />
+                </div>
+                <div class="col-md-4">
+                    <input type="text" id="numero" class="form-control" placeholder="Número" required maxlength="50" />
+                </div>
+                <div class="col-md-3">
+                    <input type="number" id="capacidad" class="form-control" placeholder="Capacidad" required min="1" />
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">Guardar</button>
+                </div>
             </div>
-            <div class="col-md-4">
-                <input type="text" id="numero" class="form-control" placeholder="Número" required>
-            </div>
-            <div class="col-md-3">
-                <input type="number" id="capacidad" class="form-control" placeholder="Capacidad" required>
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-primary w-100">Guardar</button>
-            </div>
-        </div>
-    </form>
+        </form>
 
-    <table class="table table-bordered" id="salonTable">
-        <thead class="table-light">
-            <tr>
-                <th>ID</th>
-                <th>Número</th>
-                <th>Capacidad</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+        <table class="table table-bordered" id="salonTable">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Número</th>
+                    <th>Capacidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
 
-    <script>
-        const form = document.getElementById("salonForm");
-        const tableBody = document.querySelector("#salonTable tbody");
+        <script>
+            const form = document.getElementById("salonForm");
+            const tableBody = document.querySelector("#salonTable tbody");
 
-        function cargarSalones() {
-            fetch("salon")
-                .then(res => res.json())
-                .then(data => {
-                    tableBody.innerHTML = "";
-                    data.forEach(salon => {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td>${salon.id}</td>
-                            <td>${salon.numero}</td>
-                            <td>${salon.capacidad}</td>
-                            <td>
-                                <button class="btn btn-sm btn-warning me-2" onclick="editarSalon(${salon.id}, '${salon.numero}', ${salon.capacidad})">Editar</button>
-                                <button class="btn btn-sm btn-danger" onclick="eliminarSalon(${salon.id})">Eliminar</button>
-                            </td>`;
-                        tableBody.appendChild(tr);
-                    });
-                });
-        }
+            function cargarSalones() {
+                return fetch("salon")  // <-- retornamos esta promesa
+                        .then(res => {
+                            if (!res.ok)
+                                throw new Error("No se pudo cargar la lista de salones.");
+                            return res.json();
+                        })
+                        .then(data => {
+                            tableBody.innerHTML = "";
+                            data.forEach(({ id, numero, capacidad }) => {
+                                const tr = document.createElement("tr");
+                                tr.innerHTML = `
+                        <td>${id}</td>
+                        <td>${numero}</td>
+                        <td>${capacidad}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning me-2" onclick="editarSalon(${id}, '${escapeHtml(numero)}', ${capacidad})">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarSalon(${id})">Eliminar</button>
+                        </td>`;
+                                tableBody.appendChild(tr);
+                            });
+                        })
+                        .catch(error => {
+                            console.error(error);
+                            alert(error.message);
+                        });
+            }
 
-        form.addEventListener("submit", e => {
-            e.preventDefault();
-            const id = document.getElementById("id").value;
-            const numero = document.getElementById("numero").value;
-            const capacidad = document.getElementById("capacidad").value;
 
-            const salon = { id: parseInt(id), numero, capacidad: parseInt(capacidad) };
+            form.addEventListener("submit", e => {
+                e.preventDefault();
 
-            fetch("salon", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(salon)
-            })
-            .then(res => {
-                if (res.status === 409) return actualizarSalon(salon);
-                return res.ok ? cargarSalones() : alert("Error al guardar");
+                const idValue = document.getElementById("id").value.trim();
+                const numero = document.getElementById("numero").value.trim();
+                const capacidadValue = document.getElementById("capacidad").value.trim();
+
+                if (!idValue || !numero || !capacidadValue) {
+                    alert("Todos los campos son obligatorios.");
+                    return;
+                }
+
+                const id = Number(idValue);
+                const capacidad = Number(capacidadValue);
+
+                if (!Number.isInteger(id) || id <= 0 || !Number.isInteger(capacidad) || capacidad <= 0) {
+                    alert("ID y Capacidad deben ser números enteros positivos.");
+                    return;
+                }
+
+                const salon = {id, numero, capacidad};
+
+                fetch("salon", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(salon)
+                })
+                        .then(res => {
+                            if (res.status === 201) {
+                                return cargarSalones().then(() => form.reset());
+                            } else if (res.status === 409) {
+                                // Salón ya existe, hacemos PUT para actualizar
+                                return actualizarSalon(salon);
+                            } else {
+                                return res.text().then(text => {
+                                    throw new Error(text || "Error desconocido al guardar");
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("No se pudo guardar el salón. " + error.message);
+                        });
             });
-            form.reset();
-        });
 
-        function actualizarSalon(salon) {
-            fetch("salon", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(salon)
-            }).then(() => cargarSalones());
-        }
+            function actualizarSalon(salon) {
+                return fetch("salon", {
+                    method: "PUT",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(salon)
+                })
+                        .then(res => {
+                            if (!res.ok) {
+                                return res.text().then(text => {
+                                    throw new Error(text || "Error desconocido al actualizar");
+                                });
+                            }
+                            return cargarSalones().then(() => form.reset());
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("No se pudo actualizar el salón. " + error.message);
+                        });
+            }
 
-        function editarSalon(id, numero, capacidad) {
-            document.getElementById("id").value = id;
-            document.getElementById("numero").value = numero;
-            document.getElementById("capacidad").value = capacidad;
-        }
+            function editarSalon(id, numero, capacidad) {
+                document.getElementById("id").value = id;
+                document.getElementById("numero").value = numero;
+                document.getElementById("capacidad").value = capacidad;
+            }
 
-        function eliminarSalon(id) {
-            if (!confirm("¿Seguro que deseas eliminar este salón?")) return;
-            fetch(`salon?id=${id}`, { method: "DELETE" })
-                .then(() => cargarSalones());
-        }
+            function eliminarSalon(id) {
+                if (!confirm("¿Seguro que deseas eliminar este salón?"))
+                    return;
 
-        cargarSalones();
-    </script>
-</body>
+                fetch(`salon?id=${id}`, {method: "DELETE"})
+                        .then(res => {
+                            if (!res.ok) {
+                                return res.text().then(text => {
+                                    throw new Error(text || "No se pudo eliminar el salón");
+                                });
+                            }
+                            return cargarSalones();
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("Error al eliminar el salón. " + error.message);
+                        });
+            }
+
+            // Escapar caracteres especiales para evitar problemas al insertar en innerHTML con template literals
+            function escapeHtml(text) {
+                return text.replace(/[&<>"']/g, function (m) {
+                    return ({
+                        '&': '&amp;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '"': '&quot;',
+                        "'": '&#39;'
+                    })[m];
+                });
+            }
+
+            cargarSalones();
+        </script>
+    </body>
 </html>
