@@ -23,7 +23,7 @@ import javax.persistence.EntityManagerFactory;
 
 /**
  *
- * @author FERNANDO
+ * @author NITRO
  */
 public class ClaseJpaController implements Serializable {
 
@@ -70,12 +70,12 @@ public class ClaseJpaController implements Serializable {
                 salonId = em.merge(salonId);
             }
             for (Inscripcion inscripcionCollectionInscripcion : clase.getInscripcionCollection()) {
-                Clase oldEstudianteId1OfInscripcionCollectionInscripcion = inscripcionCollectionInscripcion.getEstudianteId1();
-                inscripcionCollectionInscripcion.setEstudianteId1(clase);
+                Clase oldClaseIdOfInscripcionCollectionInscripcion = inscripcionCollectionInscripcion.getClaseId();
+                inscripcionCollectionInscripcion.setClaseId(clase);
                 inscripcionCollectionInscripcion = em.merge(inscripcionCollectionInscripcion);
-                if (oldEstudianteId1OfInscripcionCollectionInscripcion != null) {
-                    oldEstudianteId1OfInscripcionCollectionInscripcion.getInscripcionCollection().remove(inscripcionCollectionInscripcion);
-                    oldEstudianteId1OfInscripcionCollectionInscripcion = em.merge(oldEstudianteId1OfInscripcionCollectionInscripcion);
+                if (oldClaseIdOfInscripcionCollectionInscripcion != null) {
+                    oldClaseIdOfInscripcionCollectionInscripcion.getInscripcionCollection().remove(inscripcionCollectionInscripcion);
+                    oldClaseIdOfInscripcionCollectionInscripcion = em.merge(oldClaseIdOfInscripcionCollectionInscripcion);
                 }
             }
             em.getTransaction().commit();
@@ -137,18 +137,18 @@ public class ClaseJpaController implements Serializable {
             }
             for (Inscripcion inscripcionCollectionOldInscripcion : inscripcionCollectionOld) {
                 if (!inscripcionCollectionNew.contains(inscripcionCollectionOldInscripcion)) {
-                    inscripcionCollectionOldInscripcion.setEstudianteId1(null);
+                    inscripcionCollectionOldInscripcion.setClaseId(null);
                     inscripcionCollectionOldInscripcion = em.merge(inscripcionCollectionOldInscripcion);
                 }
             }
             for (Inscripcion inscripcionCollectionNewInscripcion : inscripcionCollectionNew) {
                 if (!inscripcionCollectionOld.contains(inscripcionCollectionNewInscripcion)) {
-                    Clase oldEstudianteId1OfInscripcionCollectionNewInscripcion = inscripcionCollectionNewInscripcion.getEstudianteId1();
-                    inscripcionCollectionNewInscripcion.setEstudianteId1(clase);
+                    Clase oldClaseIdOfInscripcionCollectionNewInscripcion = inscripcionCollectionNewInscripcion.getClaseId();
+                    inscripcionCollectionNewInscripcion.setClaseId(clase);
                     inscripcionCollectionNewInscripcion = em.merge(inscripcionCollectionNewInscripcion);
-                    if (oldEstudianteId1OfInscripcionCollectionNewInscripcion != null && !oldEstudianteId1OfInscripcionCollectionNewInscripcion.equals(clase)) {
-                        oldEstudianteId1OfInscripcionCollectionNewInscripcion.getInscripcionCollection().remove(inscripcionCollectionNewInscripcion);
-                        oldEstudianteId1OfInscripcionCollectionNewInscripcion = em.merge(oldEstudianteId1OfInscripcionCollectionNewInscripcion);
+                    if (oldClaseIdOfInscripcionCollectionNewInscripcion != null && !oldClaseIdOfInscripcionCollectionNewInscripcion.equals(clase)) {
+                        oldClaseIdOfInscripcionCollectionNewInscripcion.getInscripcionCollection().remove(inscripcionCollectionNewInscripcion);
+                        oldClaseIdOfInscripcionCollectionNewInscripcion = em.merge(oldClaseIdOfInscripcionCollectionNewInscripcion);
                     }
                 }
             }
@@ -193,7 +193,7 @@ public class ClaseJpaController implements Serializable {
             }
             Collection<Inscripcion> inscripcionCollection = clase.getInscripcionCollection();
             for (Inscripcion inscripcionCollectionInscripcion : inscripcionCollection) {
-                inscripcionCollectionInscripcion.setEstudianteId1(null);
+                inscripcionCollectionInscripcion.setClaseId(null);
                 inscripcionCollectionInscripcion = em.merge(inscripcionCollectionInscripcion);
             }
             em.remove(clase);

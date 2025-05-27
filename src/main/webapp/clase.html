@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Gestión de Clases</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="p-4">
+        <div class="container">
+            <h1 class="mb-4">Gestión de Clases</h1>
+            <form id="claseForm" class="mb-4">
+                <div class="mb-3">
+                    <label for="id" class="form-label">ID</label>
+                    <input type="number" id="id" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" id="nombre" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="submitBtn">Guardar</button>
+            </form>
+
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaClases"></tbody>
+            </table>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                cargarClases();
+                document.getElementById('claseForm').addEventListener('submit', guardarClase);
+            });
+
+            let editando = false;
+
+            function cargarClases() {
+                fetch('ClaseServlet')
+                        .then(res => res.json())
+                        .then(data => {
+                            const tabla = document.getElementById('tablaClases');
+                            tabla.innerHTML = '';
+                            data.forEach(clase => {
+                                const fila = document.createElement('tr');
+                                fila.innerHTML = `
+                        <td>${clase.id}</td>
+                        <td>${clase.nombre}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning" onclick="editarClase(${clase.id}, '${clase.nombre.replace(/'/g, "\\'")}')">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarClase(${clase.id})">Eliminar</button>
+                        </td>
+                    `;
+                                tabla.appendChild(fila);
+                            });
+                        });
+            }
+
+            function guardarClase(e) {
+                e.preventDefault();
+                const id = document.getElementById('id').value;
+                const nombre = document.getElementById('nombre').value;
+
+                const metodo = editando ? 'PUT' : 'POST';
+
+                fetch('ClaseServlet', {
+                    method: metodo,
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: parseInt(id), nombre: nombre})
+                })
+                        .then(res => {
+                            if (res.ok) {
+                                cargarClases();
+                                document.getElementById('claseForm').reset();
+                                editando = false;
+                                document.getElementById('submitBtn').textContent = 'Guardar';
+                            } else {
+                                return res.text().then(texto => {
+                                    throw new Error(texto);
+                                });
+                            }
+                        })
+                        .catch(err => alert("Error: " + err.message));
+            }
+
+            function editarClase(id, nombre) {
+                document.getElementById('id').value = id;
+                document.getElementById('nombre').value = nombre;
+                editando = true;
+                document.getElementById('submitBtn').textContent = 'Actualizar';
+            }
+
+            function eliminarClase(id) {
+                fetch('ClaseServlet', {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id: id})
+                })
+                        .then(res => {
+                            if (res.ok) {
+                                cargarClases();
+                            } else {
+                                return res.text().then(texto => {
+                                    throw new Error(texto);
+                                });
+                            }
+                        })
+                        .catch(err => alert("Error: " + err.message));
+            }
+        </script>
+    </body>
+</html>

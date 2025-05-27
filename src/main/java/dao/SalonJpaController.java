@@ -21,7 +21,7 @@ import javax.persistence.EntityManagerFactory;
 
 /**
  *
- * @author FERNANDO
+ * @author NITRO
  */
 public class SalonJpaController implements Serializable {
 

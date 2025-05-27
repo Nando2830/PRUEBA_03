@@ -11,8 +11,8 @@ import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import dto.Estudiante;
 import dto.Clase;
+import dto.Estudiante;
 import dto.Inscripcion;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -20,7 +20,7 @@ import javax.persistence.EntityManagerFactory;
 
 /**
  *
- * @author FERNANDO
+ * @author NITRO
  */
 public class InscripcionJpaController implements Serializable {
 
@@ -38,24 +38,24 @@ public class InscripcionJpaController implements Serializable {
         try {
             em = getEntityManager();
             em.getTransaction().begin();
+            Clase claseId = inscripcion.getClaseId();
+            if (claseId != null) {
+                claseId = em.getReference(claseId.getClass(), claseId.getId());
+                inscripcion.setClaseId(claseId);
+            }
             Estudiante estudianteId = inscripcion.getEstudianteId();
             if (estudianteId != null) {
                 estudianteId = em.getReference(estudianteId.getClass(), estudianteId.getId());
                 inscripcion.setEstudianteId(estudianteId);
             }
-            Clase estudianteId1 = inscripcion.getEstudianteId1();
-            if (estudianteId1 != null) {
-                estudianteId1 = em.getReference(estudianteId1.getClass(), estudianteId1.getId());
-                inscripcion.setEstudianteId1(estudianteId1);
-            }
             em.persist(inscripcion);
+            if (claseId != null) {
+                claseId.getInscripcionCollection().add(inscripcion);
+                claseId = em.merge(claseId);
+            }
             if (estudianteId != null) {
                 estudianteId.getInscripcionCollection().add(inscripcion);
                 estudianteId = em.merge(estudianteId);
-            }
-            if (estudianteId1 != null) {
-                estudianteId1.getInscripcionCollection().add(inscripcion);
-                estudianteId1 = em.merge(estudianteId1);
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
@@ -76,19 +76,27 @@ public class InscripcionJpaController implements Serializable {
             em = getEntityManager();
             em.getTransaction().begin();
             Inscripcion persistentInscripcion = em.find(Inscripcion.class, inscripcion.getId());
+            Clase claseIdOld = persistentInscripcion.getClaseId();
+            Clase claseIdNew = inscripcion.getClaseId();
             Estudiante estudianteIdOld = persistentInscripcion.getEstudianteId();
             Estudiante estudianteIdNew = inscripcion.getEstudianteId();
-            Clase estudianteId1Old = persistentInscripcion.getEstudianteId1();
-            Clase estudianteId1New = inscripcion.getEstudianteId1();
+            if (claseIdNew != null) {
+                claseIdNew = em.getReference(claseIdNew.getClass(), claseIdNew.getId());
+                inscripcion.setClaseId(claseIdNew);
+            }
             if (estudianteIdNew != null) {
                 estudianteIdNew = em.getReference(estudianteIdNew.getClass(), estudianteIdNew.getId());
                 inscripcion.setEstudianteId(estudianteIdNew);
             }
-            if (estudianteId1New != null) {
-                estudianteId1New = em.getReference(estudianteId1New.getClass(), estudianteId1New.getId());
-                inscripcion.setEstudianteId1(estudianteId1New);
-            }
             inscripcion = em.merge(inscripcion);
+            if (claseIdOld != null && !claseIdOld.equals(claseIdNew)) {
+                claseIdOld.getInscripcionCollection().remove(inscripcion);
+                claseIdOld = em.merge(claseIdOld);
+            }
+            if (claseIdNew != null && !claseIdNew.equals(claseIdOld)) {
+                claseIdNew.getInscripcionCollection().add(inscripcion);
+                claseIdNew = em.merge(claseIdNew);
+            }
             if (estudianteIdOld != null && !estudianteIdOld.equals(estudianteIdNew)) {
                 estudianteIdOld.getInscripcionCollection().remove(inscripcion);
                 estudianteIdOld = em.merge(estudianteIdOld);
@@ -96,14 +104,6 @@ public class InscripcionJpaController implements Serializable {
             if (estudianteIdNew != null && !estudianteIdNew.equals(estudianteIdOld)) {
                 estudianteIdNew.getInscripcionCollection().add(inscripcion);
                 estudianteIdNew = em.merge(estudianteIdNew);
-            }
-            if (estudianteId1Old != null && !estudianteId1Old.equals(estudianteId1New)) {
-                estudianteId1Old.getInscripcionCollection().remove(inscripcion);
-                estudianteId1Old = em.merge(estudianteId1Old);
-            }
-            if (estudianteId1New != null && !estudianteId1New.equals(estudianteId1Old)) {
-                estudianteId1New.getInscripcionCollection().add(inscripcion);
-                estudianteId1New = em.merge(estudianteId1New);
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
@@ -134,15 +134,15 @@ public class InscripcionJpaController implements Serializable {
             } catch (EntityNotFoundException enfe) {
                 throw new NonexistentEntityException("The inscripcion with id " + id + " no longer exists.", enfe);
             }
+            Clase claseId = inscripcion.getClaseId();
+            if (claseId != null) {
+                claseId.getInscripcionCollection().remove(inscripcion);
+                claseId = em.merge(claseId);
+            }
             Estudiante estudianteId = inscripcion.getEstudianteId();
             if (estudianteId != null) {
                 estudianteId.getInscripcionCollection().remove(inscripcion);
                 estudianteId = em.merge(estudianteId);
-            }
-            Clase estudianteId1 = inscripcion.getEstudianteId1();
-            if (estudianteId1 != null) {
-                estudianteId1.getInscripcionCollection().remove(inscripcion);
-                estudianteId1 = em.merge(estudianteId1);
             }
             em.remove(inscripcion);
             em.getTransaction().commit();

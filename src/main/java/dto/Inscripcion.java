@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  *
- * @author FERNANDO
+ * @author NITRO
  */
 @Entity
 @Table(name = "inscripcion")
@@ -30,7 +30,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 @NamedQueries({
     @NamedQuery(name = "Inscripcion.findAll", query = "SELECT i FROM Inscripcion i"),
     @NamedQuery(name = "Inscripcion.findById", query = "SELECT i FROM Inscripcion i WHERE i.id = :id"),
-    @NamedQuery(name = "Inscripcion.findByClaseId", query = "SELECT i FROM Inscripcion i WHERE i.claseId = :claseId"),
     @NamedQuery(name = "Inscripcion.findByFechaInscripcion", query = "SELECT i FROM Inscripcion i WHERE i.fechaInscripcion = :fechaInscripcion")})
 public class Inscripcion implements Serializable {
 
@@ -40,19 +39,17 @@ public class Inscripcion implements Serializable {
     @NotNull
     @Column(name = "id")
     private Integer id;
-    @Column(name = "clase_id")
-    private Integer claseId;
     @Basic(optional = false)
     @NotNull
     @Column(name = "fecha_inscripcion")
     @Temporal(TemporalType.DATE)
     private Date fechaInscripcion;
+    @JoinColumn(name = "clase_id", referencedColumnName = "id")
+    @ManyToOne
+    private Clase claseId;
     @JoinColumn(name = "estudiante_id", referencedColumnName = "id")
     @ManyToOne
     private Estudiante estudianteId;
-    @JoinColumn(name = "estudiante_id", referencedColumnName = "id")
-    @ManyToOne
-    private Clase estudianteId1;
 
     public Inscripcion() {
     }
@@ -74,14 +71,6 @@ public class Inscripcion implements Serializable {
         this.id = id;
     }
 
-    public Integer getClaseId() {
-        return claseId;
-    }
-
-    public void setClaseId(Integer claseId) {
-        this.claseId = claseId;
-    }
-
     public Date getFechaInscripcion() {
         return fechaInscripcion;
     }
@@ -90,20 +79,20 @@ public class Inscripcion implements Serializable {
         this.fechaInscripcion = fechaInscripcion;
     }
 
+    public Clase getClaseId() {
+        return claseId;
+    }
+
+    public void setClaseId(Clase claseId) {
+        this.claseId = claseId;
+    }
+
     public Estudiante getEstudianteId() {
         return estudianteId;
     }
 
     public void setEstudianteId(Estudiante estudianteId) {
         this.estudianteId = estudianteId;
-    }
-
-    public Clase getEstudianteId1() {
-        return estudianteId1;
-    }
-
-    public void setEstudianteId1(Clase estudianteId1) {
-        this.estudianteId1 = estudianteId1;
     }
 
     @Override

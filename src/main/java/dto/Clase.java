@@ -23,7 +23,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
- * @author FERNANDO
+ * @author NITRO
  */
 @Entity
 @Table(name = "clase")
@@ -45,7 +45,7 @@ public class Clase implements Serializable {
     @Size(min = 1, max = 100)
     @Column(name = "nombre")
     private String nombre;
-    @OneToMany(mappedBy = "estudianteId1")
+    @OneToMany(mappedBy = "claseId")
     private Collection<Inscripcion> inscripcionCollection;
     @JoinColumn(name = "profesor_id", referencedColumnName = "id")
     @ManyToOne
